@@ -2,8 +2,8 @@ defmodule QuantomelarischioWeb.RoomController do
   use QuantomelarischioWeb, :controller
   alias Quantomelarischio.Rooms
 
-  def create(conn, _params) do
-    case Rooms.create_room() do
+  def create(conn, %{"challenge_description" => challenge_description}) do
+    case Rooms.create_room(challenge_description) do
       {:ok, room_id} ->
         conn
         |> put_status(:created)

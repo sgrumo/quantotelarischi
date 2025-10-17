@@ -1,10 +1,13 @@
 defmodule Quantomelarischio.Rooms do
   alias Quantomelarischio.Rooms.RoomServer
 
-  def create_room() do
+  def create_room(challenge_description) do
     room_id = generate_room_id()
 
-    case DynamicSupervisor.start_child(Quantomelarischio.RoomSupervisor, {RoomServer, room_id}) do
+    case DynamicSupervisor.start_child(
+           Quantomelarischio.RoomSupervisor,
+           {RoomServer, %{room_id: room_id, challenge_description: challenge_description}}
+         ) do
       {:ok, _pid} -> {:ok, room_id}
       {:error, {:already_started, _pid}} -> {:ok, room_id}
       error -> error
@@ -64,9 +67,7 @@ defmodule Quantomelarischio.Rooms do
     end
   end
 
-  # Room Discovery and Statistics
   def list_active_rooms() do
-    # Get all active room processes
     Quantomelarischio.RoomSupervisor
     |> DynamicSupervisor.which_children()
     |> Enum.map(fn {_, pid, _, _} ->
@@ -86,14 +87,6 @@ defmodule Quantomelarischio.Rooms do
 
   defp generate_room_id() do
     :crypto.strong_rand_bytes(6) |> Base.encode32(case: :lower, padding: false)
-  end
-
-  defp validate_amount(amount) when is_integer(amount) and amount > 1, do: {:ok, amount}
-  defp validate_amount(_), do: {:error, :invalid_amount}
-
-  # Broadcast helpers (for use by channels)
-  def broadcast_to_room(room_id, event, payload) do
-    QuantomelarischioWeb.Endpoint.broadcast("room:#{room_id}", event, payload)
   end
 
   def broadcast_to_user(user_id, event, payload) do
