@@ -31,8 +31,8 @@ defmodule Quantomelarischio.Rooms do
     RoomServer.send_challenge(room_id, challenge_description)
   end
 
-  def accept_challenge(room_id, user_id, challenge_amount) do
-    case RoomServer.accept_challenge(room_id, user_id, challenge_amount) do
+  def accept_challenge(room_id, challenge_amount) do
+    case RoomServer.accept_challenge(room_id, challenge_amount) do
       :ok -> {:ok, challenge_amount}
       {:error, reason} -> {:error, reason}
     end

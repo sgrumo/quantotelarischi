@@ -89,12 +89,7 @@ defmodule Quantomelarischio.Rooms.Room do
 
   @spec accept_challenge(pos_integer(), t()) :: ok_response()
   def accept_challenge(challenge_amount, state) do
-    new_state = %Room{
-      state
-      | challenge_amount: challenge_amount
-    }
-
-    {:ok, new_state}
+    {:ok, %{state | challenge_amount: challenge_amount}}
   end
 
   @spec place_bet(String.t(), pos_integer(), t()) :: error()
@@ -158,7 +153,7 @@ defmodule Quantomelarischio.Rooms.Room do
           challenged_id: challenged_id
         } = _state
       ) do
-    %Room{
+    new_state = %Room{
       room_id: room_id,
       challenge_amount: nil,
       challenger_id: challenger_id,
@@ -169,6 +164,8 @@ defmodule Quantomelarischio.Rooms.Room do
       challenge_description: nil,
       created_at: created_at
     }
+
+    {:ok, new_state}
   end
 
   @spec leave(String.t(), t()) :: ok_response()

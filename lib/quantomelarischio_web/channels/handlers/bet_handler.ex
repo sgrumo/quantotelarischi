@@ -25,9 +25,8 @@ defmodule QuantomelarischioWeb.Channels.Handlers.BetHandler do
 
   def handle("accept_challenge", %{"amount" => amount}, socket) do
     room_id = socket.assigns.room_id
-    user_id = socket.assigns.user_id
 
-    case Rooms.accept_challenge(room_id, user_id, amount) do
+    case Rooms.accept_challenge(room_id, amount) do
       {:ok, bet} ->
         Endpoint.broadcast("room:#{room_id}", "challenge_accepted", %{
           amount: bet

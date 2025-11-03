@@ -18,8 +18,8 @@ defmodule Quantomelarischio.Rooms.RoomServer do
     GenServer.call(via_tuple(room_id), {:send_challenge, challenge_description})
   end
 
-  def accept_challenge(room_id, user_id, challenge_amount) do
-    GenServer.call(via_tuple(room_id), {:accept_challenge, user_id, challenge_amount})
+  def accept_challenge(room_id, challenge_amount) do
+    GenServer.call(via_tuple(room_id), {:accept_challenge, challenge_amount})
   end
 
   def decline_challenge(room_id, user_id) do
@@ -114,19 +114,19 @@ defmodule Quantomelarischio.Rooms.RoomServer do
         {:reply, {:error, reason}, state}
 
       {:ok,
-       %{
+       %Room{
          status: status,
-         challenger_amount: challenger_bet_amount,
-         challenged_amount: challenged_bet_amount
-       } = state}
+         challenger_bet_amount: challenger_bet_amount,
+         challenged_bet_amount: challenged_bet_amount
+       } = new_state}
       when status != nil ->
         {:reply,
          {:ok,
-          %{
+          %Room{
             status: status,
             challenger_bet_amount: challenger_bet_amount,
             challenged_bet_amount: challenged_bet_amount
-          }}, state}
+          }}, new_state}
 
       {:ok, new_state} ->
         {:reply, :ok, new_state}
