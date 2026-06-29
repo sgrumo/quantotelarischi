@@ -39,7 +39,11 @@ defmodule Quantomelarischio.Rooms.Room do
           }
 
   @type error_reason ::
-          :user_already_inside | :room_full | :invalid_bet_amount | :invalid_challenge_bet_amount
+          :user_already_inside
+          | :room_full
+          | :invalid_bet_amount
+          | :invalid_challenge_bet_amount
+          | :challenge_not_accepted
   @type error :: {:error, error_reason()}
   @type ok_response :: {:ok, t()}
   @type response :: error() | ok_response()
@@ -90,6 +94,11 @@ defmodule Quantomelarischio.Rooms.Room do
   @spec accept_challenge(pos_integer(), t()) :: ok_response()
   def accept_challenge(challenge_amount, state) do
     {:ok, %{state | challenge_amount: challenge_amount}}
+  end
+
+  @spec place_bet(String.t(), pos_integer(), t()) :: error()
+  def place_bet(_user_id, _amount, %{challenge_amount: nil} = _state) do
+    {:error, :challenge_not_accepted}
   end
 
   @spec place_bet(String.t(), pos_integer(), t()) :: error()

@@ -42,7 +42,6 @@ defmodule QuantomelarischioWeb.RoomChannel do
     case BetHandler.handle(event, payload, socket) do
       {:reply, response, socket} -> {:reply, response, socket}
       {:reply, {:ok, socket}} -> {:reply, :ok, socket}
-      _ -> {:reply, {:error, %{reason: "Error in handling"}}, socket}
     end
   end
 
