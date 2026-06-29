@@ -5,7 +5,7 @@ defmodule Quantomelarischio.MixProject do
     [
       app: :quantomelarischio,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -32,13 +32,13 @@ defmodule Quantomelarischio.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.14"},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
-      {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"},
+      {:phoenix, "~> 1.8.8"},
+      {:phoenix_live_dashboard, "~> 0.8.7"},
+      {:telemetry_metrics, "~> 1.1"},
+      {:telemetry_poller, "~> 1.3"},
+      {:jason, "~> 1.4"},
+      {:dns_cluster, "~> 0.2.0"},
+      {:bandit, "~> 1.12"},
       {:cors_plug, "~> 3.0"},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
