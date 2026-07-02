@@ -7,26 +7,80 @@
 /* Heroicons — generates `hero-*` utilities from deps/heroicons */
 @plugin "../vendor/heroicons";
 
-/* Quantotelarischi theme tokens (from the wireframe palette) */
+/* Quantotelarischi theme tokens (from Quantotelarischi.dc.html) */
 @theme {
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-hand: "Architects Daughter", cursive;
+  --font-sans: "Funnel Sans", system-ui, sans-serif;
+  --font-display: "Funnel Display", system-ui, sans-serif;
 
-  --color-paper: #eceae4;
-  --color-ink: #1a1a1a;
-  --color-accent: #e0531f;
+  --color-paper: #f7f7f8;
+  --color-ink: #1e1e1e;
+  --color-muted: #71717a;
+  --color-muted2: #3a3d4f;
+  --color-faint: #8f92a3;
+  --color-line: #ededed;
+  --color-line2: #d8d8dd;
 
-  --shadow-hard: 4px 5px 0 rgba(0, 0, 0, 0.12);
+  --color-brand: #5e30e6;
+  --color-brand-dark: #4b24bf;
+  --color-brand-darker: #391a99;
+  --color-brand-soft: #ddd2ff;
+
+  --color-good: #059669;
+  --color-good-bg: #e8fff7;
+  --color-good-line: #bdfce7;
+
+  --color-bad: #dc2626;
+  --color-bad-bg: #fee2e2;
+  --color-bad-line: #fecaca;
+
+  --shadow-brand: 0 2px 8px -1px rgba(94, 48, 230, 0.35);
+  --shadow-card: 0 8px 16px -2px rgba(30, 41, 59, 0.1);
+  --shadow-verdict: 0 16px 24px -4px rgba(30, 41, 59, 0.16);
 }
 
-/* Phone-frame shake on a losing verdict */
-@keyframes qtlr-shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-4px); }
-  40%, 60% { transform: translateX(4px); }
+/* Screen transitions and verdict effects (ported from the design) */
+@keyframes qrise {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes qshake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-9px); }
+  30% { transform: translateX(9px); }
+  45% { transform: translateX(-7px); }
+  60% { transform: translateX(7px); }
+  75% { transform: translateX(-4px); }
+  90% { transform: translateX(4px); }
+}
+@keyframes qflash {
+  0% { opacity: 0; }
+  22% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+@keyframes qspin {
+  to { transform: rotate(360deg); }
 }
 
-.animate-shake {
-  animation: qtlr-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+.animate-rise { animation: qrise 0.35s ease-out; }
+.animate-shake { animation: qshake 0.5s ease-in-out; }
+.animate-spin-slow { animation: qspin 1s linear infinite; }
+
+/* Clean typed number field — no native +/- spinners */
+input[type="number"].no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"].no-spin::-webkit-outer-spin-button,
+input[type="number"].no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.red-flash {
+  position: fixed;
+  inset: 0;
+  background: #dc2626;
+  pointer-events: none;
+  z-index: 60;
+  animation: qflash 0.55s ease-out;
 }

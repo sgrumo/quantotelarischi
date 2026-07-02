@@ -26,10 +26,12 @@ defmodule QuantomelarischioWeb.RoomLive do
         {:error, reason} -> {:ok, redirect_with_error(socket, reason)}
       end
     else
-      # Dead render before the socket connects: show whatever exists, if anything.
       case Rooms.get_room(room_id) do
-        {:ok, room} -> {:ok, assign_room(socket, room)}
-        {:error, _} -> {:ok, assign(socket, room: nil, role: :spectator, phase: :loading)}
+        {:ok, room} ->
+          {:ok, assign_room(socket, room)}
+
+        {:error, _} ->
+          {:ok, assign(socket, room: nil, role: :spectator, phase: :loading, nav_step: 2)}
       end
     end
   end
@@ -40,32 +42,23 @@ defmodule QuantomelarischioWeb.RoomLive do
   end
 
   @impl true
-  def handle_event("amount_inc", _params, socket) do
-    {:noreply, update(socket, :amount, &(&1 + 1))}
+  def handle_event("amount_change", %{"amount" => amount}, socket) do
+    {:noreply, assign(socket, :amount, parse_int(amount, socket.assigns.amount))}
   end
 
-  def handle_event("amount_dec", _params, socket) do
-    {:noreply, update(socket, :amount, &max(2, &1 - 1))}
-  end
-
-  def handle_event("lock_amount", _params, socket) do
-    case Rooms.accept_challenge(socket.assigns.room_id, socket.assigns.amount) do
+  def handle_event("lock_amount", %{"amount" => amount}, socket) do
+    case Rooms.accept_challenge(socket.assigns.room_id, parse_int(amount, 0)) do
       {:ok, _amount} -> {:noreply, socket}
       {:error, _reason} -> {:noreply, put_flash(socket, :error, "Importo non valido (minimo 2).")}
     end
   end
 
-  def handle_event("pick_inc", _params, socket) do
-    max = max_pick(socket.assigns.room)
-    {:noreply, update(socket, :pick, &min(max, &1 + 1))}
+  def handle_event("pick_change", %{"pick" => pick}, socket) do
+    {:noreply, assign(socket, :pick, parse_int(pick, socket.assigns.pick))}
   end
 
-  def handle_event("pick_dec", _params, socket) do
-    {:noreply, update(socket, :pick, &max(1, &1 - 1))}
-  end
-
-  def handle_event("place_bet", _params, socket) do
-    case Rooms.place_bet(socket.assigns.room_id, socket.assigns.user_id, socket.assigns.pick) do
+  def handle_event("place_bet", %{"pick" => pick}, socket) do
+    case Rooms.place_bet(socket.assigns.room_id, socket.assigns.user_id, parse_int(pick, 0)) do
       :ok -> {:noreply, socket}
       {:ok, _result} -> {:noreply, socket}
       {:error, _reason} -> {:noreply, put_flash(socket, :error, "Numero non valido.")}
@@ -91,17 +84,13 @@ defmodule QuantomelarischioWeb.RoomLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div
-      id="room"
-      class={[
-        "flex flex-1 flex-col rounded-[22px] border-2 border-ink bg-white p-5 shadow-hard",
-        @phase == :verdict && @room.status == "completed" && "animate-shake"
-      ]}
-    >
+    <div class="animate-rise mx-auto max-w-2xl">
       <%= case @phase do %>
         <% :loading -> %>
-          <.header_bar title="Stanza" />
-          <div class="mt-6 text-center font-hand text-ink/60">Carico la stanza…</div>
+          <div class="rounded-3xl border border-line bg-white p-8 text-center text-xl text-muted shadow-card">
+            <i class="ri-loader-4-line animate-spin-slow text-4xl text-brand"></i>
+            <p class="mt-4">Carico la stanza…</p>
+          </div>
         <% :lobby -> %>
           {lobby(assigns)}
         <% :set_amount -> %>
@@ -115,111 +104,138 @@ defmodule QuantomelarischioWeb.RoomLive do
     """
   end
 
-  # Screen 03 — lobby: challenger waiting for a second player, shareable link.
+  # Screen 2 — lobby: challenger waiting for a second player.
   defp lobby(assigns) do
     ~H"""
-    <.header_bar title={"Stanza ##{@room_id}"} />
-    <.challenge text={@room.challenge_description} label="La tua sfida" />
+    <.room_header room_id={@room_id} />
+    <div class="rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
+      <.challenge_box text={@room.challenge_description} label="La tua sfida" />
 
-    <p class="mt-3 font-hand text-sm text-ink/50">link condivisibile</p>
-    <div class="mt-1 flex gap-2">
-      <div class="flex-1 truncate rounded-lg border-2 border-ink/20 bg-paper px-3 py-2 font-hand text-sm text-ink/70">
-        {share_url(@room_id)}
+      <div class="mb-2 text-base text-muted">Link condivisibile</div>
+      <div class="mb-6 flex gap-2.5">
+        <div class="flex min-w-0 flex-1 items-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-line2 bg-paper px-5 py-3.5 text-base text-muted2">
+          {share_url(@room_id)}
+        </div>
+        <button
+          id="copy-link"
+          type="button"
+          phx-hook="CopyLink"
+          data-clipboard={share_url(@room_id)}
+          aria-label="Copia il link della stanza"
+          class="flex flex-none items-center gap-2 rounded-full bg-ink px-6 text-base font-semibold text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/30"
+        >
+          <i class="ri-file-copy-line text-lg"></i>Copia
+        </button>
       </div>
-      <button
-        id="copy-link"
-        type="button"
-        phx-hook="CopyLink"
-        data-clipboard={share_url(@room_id)}
-        class="rounded-lg border-2 border-ink bg-white px-3 py-2 text-xs font-bold uppercase text-ink hover:bg-paper"
-      >
-        Copia
-      </button>
-    </div>
 
-    <div class="mt-4 flex flex-col gap-2">
-      <.slot_row label="P1 · TU" filled={true} />
-      <.slot_row label="P2 · vuoto" filled={false} />
-    </div>
+      <div class="flex flex-col gap-3">
+        <.player_slot name="Tu · lo sfidante" state="in" />
+        <.player_slot name="In attesa dell'idiota" state="empty" />
+      </div>
 
-    <div class="mt-auto flex items-center justify-center pt-6 text-center font-hand text-ink/60">
-      "In attesa che un coglione abbocchi…"
+      <p class="mt-6 text-center text-lg italic text-muted">
+        "In attesa che un coglione abbocchi…"
+      </p>
     </div>
     """
   end
 
-  # Screen 04 / 03b — challenged sets the pot; challenger waits.
+  # Screen 4 (challenged) / screen 3 (challenger waiting) — set the pot.
   defp set_amount(%{role: :challenged} = assigns) do
     ~H"""
-    <.header_bar title="Lo sfidato decide" />
-    <.challenge text={@room.challenge_description} />
-
-    <p class="mt-3 text-center font-hand text-ink/70">Quanto vale questa stronzata?</p>
-
-    <div class="my-4 flex flex-1 items-center justify-center rounded-xl border-2 border-ink text-7xl font-extrabold text-ink">
-      {@amount}
+    <div class="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">
+      Lo sfidato decide
     </div>
+    <.challenge_box text={@room.challenge_description} />
+    <h2 class="mb-8 font-display text-[clamp(34px,7vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
+      Quanto vale questa stronzata?
+    </h2>
 
-    <div class="flex gap-2">
-      <.button variant="ghost" phx-click="amount_dec" class="flex-1">−</.button>
-      <.button phx-click="amount_inc" class="flex-1">+</.button>
-    </div>
-    <p class="mt-1 text-center font-hand text-sm text-ink/50">minimo 2</p>
-
-    <.button phx-click="lock_amount" class="mt-3">Blocca l'importo</.button>
+    <form id="amount-form" phx-submit="lock_amount" phx-change="amount_change">
+      <label for="amount" class="sr-only">Importo della posta (minimo 2)</label>
+      <input
+        id="amount"
+        type="number"
+        name="amount"
+        value={@amount}
+        min="2"
+        inputmode="numeric"
+        autocomplete="off"
+        class="no-spin w-full rounded-3xl border border-line2 bg-white py-7 text-center font-display text-[clamp(72px,20vw,120px)] font-extrabold leading-none text-ink focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15"
+      />
+      <p class="mb-8 mt-4 text-center text-base text-muted">Importo minimo: 2 · premi Invio per bloccare</p>
+      <.button type="submit">
+        Blocca l'importo <i class="ri-lock-line text-2xl"></i>
+      </.button>
+    </form>
     """
   end
 
   defp set_amount(assigns) do
     ~H"""
-    <.header_bar title={"Stanza ##{@room_id}"} />
-    <.challenge text={@room.challenge_description} label="La tua sfida" />
-
-    <div class="mt-4 flex flex-col gap-2">
-      <.slot_row label="P1 · TU" filled={true} />
-      <.slot_row label="P2 · L'IDIOTA" filled={true} />
-    </div>
-
-    <div class="mt-auto pt-6 text-center font-hand text-ink/60">
-      ⏳<br /> "L'idiota sta decidendo quanto vali… aspetta, pezzo di merda."
+    <.room_header room_id={@room_id} />
+    <div class="rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
+      <.challenge_box text={@room.challenge_description} label="La tua sfida" />
+      <div class="flex flex-col gap-3">
+        <.player_slot name="Tu · lo sfidante" state="in" />
+        <.player_slot name="L'idiota · lo sfidato" state="in" />
+      </div>
+      <div class="mt-7 text-center">
+        <i class="ri-loader-4-line animate-spin-slow text-4xl text-brand"></i>
+        <p class="mt-4 text-lg leading-snug text-muted">
+          "L'idiota sta decidendo quanto vali… aspetta, pezzo di merda."
+        </p>
+      </div>
     </div>
     """
   end
 
-  # Screen 05 — pick a secret number from 1 to (pot − 1).
+  # Screen 5 — pick a secret number from 1 to (pot − 1).
   defp betting(assigns) do
     assigns = assign(assigns, :placed, my_bet(assigns.room, assigns.role))
 
     ~H"""
-    <.header_bar title="In segreto" />
-    <.challenge text={@room.challenge_description} />
-
     <%= if @placed do %>
-      <div class="mt-6 flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <div class="text-2xl">🔒</div>
-        <p class="font-hand text-ink/60">Numero bloccato. Aspetta l'altro coglione…</p>
+      <div class="rounded-3xl border border-line bg-white p-8 text-center shadow-card">
+        <i class="ri-lock-2-line text-4xl text-brand"></i>
+        <p class="mt-4 text-lg leading-snug text-muted">
+          Numero bloccato. Aspetta l'altro coglione…
+        </p>
       </div>
     <% else %>
-      <p class="mt-3 text-center font-hand text-sm text-ink/60">
-        un numero da 1 a {max_pick(@room)}
-      </p>
-      <div class="my-3 flex items-stretch gap-2">
-        <.button variant="ghost" phx-click="pick_dec" class="flex !w-12 items-center justify-center !p-0 text-2xl">
-          −
-        </.button>
-        <div class="flex flex-1 items-center justify-center rounded-xl border-2 border-ink py-4 text-5xl font-extrabold text-ink">
-          {@pick}
-        </div>
-        <.button phx-click="pick_inc" class="flex !w-12 items-center justify-center !p-0 text-2xl">
-          +
-        </.button>
+      <div class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted">
+        <i class="ri-eye-off-line text-base"></i>In segreto
       </div>
-      <.button phx-click="place_bet" class="mt-auto">Conferma il numero</.button>
+      <.challenge_box text={@room.challenge_description} />
+      <h2 class="mb-2 font-display text-[clamp(34px,7vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
+        Scegli il tuo numero
+      </h2>
+      <p class="mb-8 text-xl text-muted">
+        Un numero da 1 a {max_pick(@room)}. Non farti fregare.
+      </p>
+
+      <form id="pick-form" phx-submit="place_bet" phx-change="pick_change">
+        <label for="pick" class="sr-only">Il tuo numero segreto</label>
+        <input
+          id="pick"
+          type="number"
+          name="pick"
+          value={@pick}
+          min="1"
+          max={max_pick(@room)}
+          inputmode="numeric"
+          autocomplete="off"
+          class="no-spin w-full rounded-3xl border border-line2 bg-white py-7 text-center font-display text-[clamp(72px,20vw,120px)] font-extrabold leading-none text-brand focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15"
+        />
+        <.button type="submit" class="mt-8">
+          Conferma il numero <i class="ri-check-line text-2xl"></i>
+        </.button>
+      </form>
     <% end %>
     """
   end
 
-  # Screen 06 — verdict.
+  # Screen 6 — verdict.
   defp verdict(assigns) do
     a = assigns.room.challenger_bet_amount
     b = assigns.room.challenged_bet_amount
@@ -236,101 +252,159 @@ defmodule QuantomelarischioWeb.RoomLive do
       )
 
     ~H"""
-    <.header_bar title="Verdetto" />
-    <.challenge text={@room.challenge_description} />
-
-    <div class="mt-3 text-center">
-      <span class="inline-block rounded-full border-2 border-ink px-3 py-1 text-xs font-bold uppercase text-ink">
-        ① Posta: {@pot}
-      </span>
+    <div class="text-center text-sm font-semibold uppercase tracking-widest text-muted">
+      Il verdetto
     </div>
+    <div :if={@must_do} class="red-flash"></div>
+    <div
+      id="verdict-card"
+      phx-hook="Verdict"
+      data-mustdo={to_string(@must_do)}
+      class={[
+        "mt-3 rounded-3xl border border-line bg-white p-6 shadow-verdict sm:p-8",
+        @must_do && "animate-shake"
+      ]}
+    >
+      <.challenge_box text={@room.challenge_description} center={true} />
 
-    <div class="mt-3 flex items-end gap-2">
-      <div class="flex-1 text-center">
-        <p class="mb-1 font-hand text-sm text-ink/60">② TU · sfidante</p>
-        <div class="flex h-14 items-center justify-center rounded-xl border-2 border-ink text-2xl font-extrabold">
-          {@a}
-        </div>
+      <div class="mb-5 flex justify-center">
+        <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-2 text-lg font-semibold text-ink">
+          <i class="ri-coins-line text-brand"></i>Posta: {@pot}
+        </span>
       </div>
-      <div class="pb-4 text-xl font-extrabold">+</div>
-      <div class="flex-1 text-center">
-        <p class="mb-1 font-hand text-sm text-ink/60">③ IDIOTA · sfidato</p>
-        <div class="flex h-14 items-center justify-center rounded-xl border-2 border-ink text-2xl font-extrabold">
-          {@b}
-        </div>
+
+      <div class="mb-6 flex items-stretch gap-4">
+        <.verdict_number caption={left_caption(@role)} value={@a} />
+        <div class="flex flex-none items-center font-display text-4xl font-bold text-line2">+</div>
+        <.verdict_number caption={right_caption(@role)} value={@b} />
       </div>
+
+      <div class="mb-6 flex flex-col gap-2.5">
+        <.verdict_row hit={@sum_hit}>
+          <:label>Somma · {@a} + {@b} = {@a + @b}</:label>
+          <:verb>{if @sum_hit, do: "= #{@pot}", else: "≠ #{@pot}"}</:verb>
+        </.verdict_row>
+        <.verdict_row hit={@equal_hit}>
+          <:label>Uguali? · {@a} e {@b}</:label>
+          <:verb>{if @equal_hit, do: "Sì", else: "No"}</:verb>
+        </.verdict_row>
+      </div>
+
+      <div class={[
+        "flex w-full items-center justify-center gap-3 rounded-3xl border p-7 font-display text-[clamp(30px,7vw,44px)] font-extrabold leading-none tracking-tight",
+        @must_do && "border-bad-line bg-bad-bg text-bad",
+        !@must_do && "border-good-line bg-good-bg text-good"
+      ]}>
+        <i class={if @must_do, do: "ri-emotion-normal-line", else: "ri-emotion-laugh-line"} style="font-size:36px"></i>
+        {if @must_do, do: "DEVI FARLO", else: "TE LA SEI SCAMPATA"}
+      </div>
+      <p class="mt-4 text-center text-lg italic text-muted">
+        {if @must_do,
+          do: "Niente scuse, coglione. Ora esegui.",
+          else: "Culo sfacciato. Stavolta l'hai scampata."}
+      </p>
     </div>
 
-    <div class="mt-3 flex flex-col gap-2">
-      <.check_row hit={@sum_hit} label={"④ Somma · #{@a} + #{@b} = #{@a + @b}"} target={"= #{@pot}"} />
-      <.check_row hit={@equal_hit} label={"⑤ Uguali? · #{@a}"} target={"= #{@b}"} />
-    </div>
-
-    <div class={[
-      "mt-4 rounded-md px-3 py-3 text-center text-lg font-extrabold uppercase tracking-tight text-white",
-      @must_do && "bg-accent",
-      !@must_do && "bg-ink"
-    ]}>
-      {if @must_do, do: "Devi farlo", else: "Te la sei scampata"}
-    </div>
-
-    <.button variant="ghost" phx-click="reset" class="mt-auto">Rigioca</.button>
+    <.button variant="ghost" phx-click="reset" class="mt-5">
+      <i class="ri-restart-line text-2xl"></i>Rigioca
+    </.button>
     """
   end
 
-  ## Small shared pieces
+  ## Shared pieces
 
-  attr :title, :string, required: true
+  attr :room_id, :string, required: true
 
-  defp header_bar(assigns) do
+  defp room_header(assigns) do
     ~H"""
-    <div class="rounded-md bg-ink px-3 py-2 text-center text-base font-extrabold uppercase tracking-tight text-white">
-      {@title}
+    <div class="mb-6 flex items-center justify-between">
+      <div class="text-sm font-semibold uppercase tracking-widest text-muted">La stanza</div>
+      <span class="rounded-full bg-brand-soft px-4 py-1.5 font-display text-base font-semibold text-brand">
+        #{String.upcase(@room_id)}
+      </span>
     </div>
     """
   end
 
   attr :text, :string, required: true
   attr :label, :string, default: "La sfida"
+  attr :center, :boolean, default: false
 
-  defp challenge(assigns) do
+  defp challenge_box(assigns) do
     ~H"""
-    <div class="mt-3 rounded-lg border-2 border-dashed border-ink/25 bg-paper px-3 py-2 text-center">
-      <p class="text-[10px] font-bold uppercase tracking-wide text-accent">{@label}</p>
-      <p class="font-hand text-sm text-ink/70">{@text}</p>
+    <div class={[
+      "mb-6 rounded-2xl border border-line bg-paper px-5 py-5",
+      @center && "text-center"
+    ]}>
+      <div class="text-xs font-semibold uppercase tracking-wider text-brand">{@label}</div>
+      <div class="mt-1.5 font-display text-2xl font-medium leading-snug text-ink">{@text}</div>
     </div>
     """
   end
 
-  attr :label, :string, required: true
-  attr :filled, :boolean, required: true
+  attr :name, :string, required: true
+  attr :state, :string, required: true, values: ~w(in empty)
 
-  defp slot_row(assigns) do
+  defp player_slot(%{state: "in"} = assigns) do
     ~H"""
-    <div class={[
-      "flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-xs font-bold uppercase",
-      @filled && "border-accent text-ink",
-      !@filled && "border-dashed border-ink/30 text-ink/40"
-    ]}>
-      {@label}
-      <span class="ml-auto">{if @filled, do: "●", else: "○"}</span>
+    <div class="flex items-center gap-4 rounded-2xl border border-brand-soft bg-white p-4">
+      <span class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-brand font-display text-lg font-bold text-white">
+        {String.first(@name)}
+      </span>
+      <div class="flex-1">
+        <div class="text-lg font-semibold text-ink">{@name}</div>
+        <div class="text-sm font-medium text-good">Nella stanza</div>
+      </div>
+      <i class="ri-checkbox-circle-fill text-2xl text-good"></i>
+    </div>
+    """
+  end
+
+  defp player_slot(assigns) do
+    ~H"""
+    <div class="flex items-center gap-4 rounded-2xl border border-dashed border-line2 bg-paper p-4">
+      <span class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-line text-faint">
+        <i class="ri-question-mark text-xl"></i>
+      </span>
+      <div class="flex-1">
+        <div class="text-lg font-semibold text-faint">{@name}</div>
+        <div class="text-sm text-line2">Slot libero</div>
+      </div>
+      <i class="ri-loader-4-line animate-spin-slow text-xl text-line2"></i>
+    </div>
+    """
+  end
+
+  attr :caption, :string, required: true
+  attr :value, :integer, required: true
+
+  defp verdict_number(assigns) do
+    ~H"""
+    <div class="flex-1 text-center">
+      <div class="mb-2 text-sm font-medium text-muted">{@caption}</div>
+      <div class="rounded-2xl border border-line bg-paper py-6 font-display text-[clamp(48px,13vw,84px)] font-extrabold leading-none text-ink">
+        {@value}
+      </div>
     </div>
     """
   end
 
   attr :hit, :boolean, required: true
-  attr :label, :string, required: true
-  attr :target, :string, required: true
+  slot :label, required: true
+  slot :verb, required: true
 
-  defp check_row(assigns) do
+  defp verdict_row(assigns) do
     ~H"""
     <div class={[
-      "flex items-center justify-between rounded-lg border-2 px-3 py-2 text-sm font-bold",
-      @hit && "border-accent text-accent",
-      !@hit && "border-ink/20 text-ink/50"
+      "flex items-center justify-between rounded-2xl border px-5 py-4 text-lg font-medium",
+      @hit && "border-good-line bg-good-bg text-good",
+      !@hit && "border-line bg-paper text-faint"
     ]}>
-      <span>{@label} {@target}</span>
-      <span>{if @hit, do: "✓", else: "✗"}</span>
+      <span class="flex items-center gap-2">
+        <i class={[@hit && "ri-checkbox-circle-fill", !@hit && "ri-close-circle-line", "text-xl"]}></i>
+        {render_slot(@label)}
+      </span>
+      <span class="font-bold">{render_slot(@verb)}</span>
     </div>
     """
   end
@@ -338,6 +412,8 @@ defmodule QuantomelarischioWeb.RoomLive do
   ## Helpers
 
   defp assign_room(socket, %Room{} = room) do
+    phase = phase(room)
+
     pick =
       if room.challenge_amount,
         do: min(socket.assigns[:pick] || 1, max(1, room.challenge_amount - 1)),
@@ -346,7 +422,8 @@ defmodule QuantomelarischioWeb.RoomLive do
     assign(socket,
       room: room,
       role: role(room, socket.assigns.user_id),
-      phase: phase(room),
+      phase: phase,
+      nav_step: nav_step(phase),
       pick: pick
     )
   end
@@ -380,12 +457,30 @@ defmodule QuantomelarischioWeb.RoomLive do
 
   defp phase(_room), do: :lobby
 
+  defp nav_step(:lobby), do: 2
+  defp nav_step(:set_amount), do: 3
+  defp nav_step(:betting), do: 4
+  defp nav_step(:verdict), do: 5
+
   defp my_bet(%Room{challenger_bet_amount: amount}, :challenger), do: amount
   defp my_bet(%Room{challenged_bet_amount: amount}, :challenged), do: amount
   defp my_bet(_room, _role), do: nil
 
   defp max_pick(%Room{challenge_amount: nil}), do: 1
   defp max_pick(%Room{challenge_amount: amount}), do: max(1, amount - 1)
+
+  defp left_caption(:challenger), do: "Tu · sfidante"
+  defp left_caption(_), do: "Sfidante"
+
+  defp right_caption(:challenged), do: "Tu · sfidato"
+  defp right_caption(_), do: "L'idiota · sfidato"
+
+  defp parse_int(value, default) do
+    case Integer.parse(to_string(value)) do
+      {int, _rest} -> int
+      :error -> default
+    end
+  end
 
   defp share_url(room_id), do: url(~p"/r/#{room_id}")
 end

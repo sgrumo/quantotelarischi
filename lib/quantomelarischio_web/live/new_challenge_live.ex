@@ -7,7 +7,7 @@ defmodule QuantomelarischioWeb.NewChallengeLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(page_title: "Nuova stanza")
+     |> assign(page_title: "Nuova stanza", nav_step: 1)
      |> assign(form: to_form(%{"challenge_description" => ""}))}
   end
 
@@ -31,26 +31,27 @@ defmodule QuantomelarischioWeb.NewChallengeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="flex flex-1 flex-col">
-      <div class="rounded-md bg-ink px-3 py-2 text-center text-lg font-extrabold uppercase tracking-tight text-white">
+    <div class="animate-rise mx-auto max-w-2xl">
+      <div class="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">
         Nuova stanza
       </div>
+      <h2 class="mb-8 font-display text-[clamp(38px,8vw,68px)] font-bold leading-[1.02] tracking-tight text-ink">
+        Quanto te la rischi a…
+      </h2>
 
-      <.form for={@form} phx-submit="create" class="flex flex-1 flex-col">
-        <p class="my-4 font-hand text-base text-ink/70">Quanto te la rischi a…</p>
-
+      <.form for={@form} phx-submit="create">
         <.input
           field={@form[:challenge_description]}
           type="textarea"
-          rows="5"
-          placeholder="…mungere una mucca"
+          label="La tua sfida"
+          placeholder="…mungere una mucca davanti a tutti"
         />
-
-        <p class="mt-3 font-hand text-sm text-ink/50">scrivi una stronzata</p>
-
-        <div class="flex-1"></div>
-
-        <.button type="submit">Sfida un idiota</.button>
+        <p class="mb-8 ml-1 mt-3 text-base text-muted">
+          Scrivi una stronzata. Più è assurda, meglio è.
+        </p>
+        <.button type="submit">
+          Sfida un idiota <i class="ri-user-add-line text-2xl"></i>
+        </.button>
       </.form>
     </div>
     """

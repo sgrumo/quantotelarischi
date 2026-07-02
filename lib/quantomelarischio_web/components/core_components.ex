@@ -32,14 +32,14 @@ defmodule QuantomelarischioWeb.CoreComponents do
       :if={msg = Phoenix.Flash.get(@flash, @kind)}
       role="alert"
       class={[
-        "fixed top-4 right-4 z-50 flex items-start gap-3 rounded-xl border-2 border-ink px-4 py-3 shadow-hard",
-        @kind == :info && "bg-white text-ink",
-        @kind == :error && "bg-accent text-white"
+        "fixed top-20 right-4 z-50 flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-card",
+        @kind == :info && "border-line bg-white text-ink",
+        @kind == :error && "border-bad-line bg-bad-bg text-bad"
       ]}
     >
       <p class="text-sm font-semibold">{msg}</p>
       <button type="button" class="opacity-70 hover:opacity-100" phx-click={JS.push("lv:clear-flash", value: %{key: @kind})}>
-        <.icon name="hero-x-mark" class="h-5 w-5" />
+        <i class="ri-close-line text-lg"></i>
       </button>
     </div>
     """
@@ -76,12 +76,12 @@ defmodule QuantomelarischioWeb.CoreComponents do
   @spec button(map()) :: Phoenix.LiveView.Rendered.t()
   def button(%{rest: rest} = assigns) do
     base =
-      "block w-full rounded-lg px-4 py-3 text-center text-sm font-bold uppercase tracking-wide transition active:translate-y-px disabled:opacity-40 disabled:pointer-events-none"
+      "flex w-full items-center justify-center gap-3 rounded-full px-8 py-6 text-2xl font-semibold transition active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/30 disabled:opacity-40 disabled:pointer-events-none"
 
     variant =
       case assigns.variant do
-        "ghost" -> "bg-white text-ink border-2 border-ink hover:bg-paper"
-        _ -> "bg-accent text-white border-2 border-accent hover:brightness-95"
+        "ghost" -> "border border-line2 bg-white text-ink hover:bg-paper"
+        _ -> "bg-brand text-white shadow-brand hover:bg-brand-dark active:bg-brand-darker"
       end
 
     assigns = assign(assigns, :classes, [base, variant, assigns.class])
@@ -132,7 +132,8 @@ defmodule QuantomelarischioWeb.CoreComponents do
         id={@id}
         name={@name}
         class={[
-          "w-full rounded-lg border-2 border-ink/30 bg-white p-3 text-ink focus:border-accent focus:outline-none",
+          "w-full min-h-[220px] resize-y rounded-3xl border border-line2 bg-white px-6 py-5 text-2xl leading-snug text-ink shadow-sm",
+          "focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15",
           @class
         ]}
         {@rest}

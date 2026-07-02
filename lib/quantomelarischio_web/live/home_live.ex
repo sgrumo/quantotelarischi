@@ -2,47 +2,60 @@ defmodule QuantomelarischioWeb.HomeLive do
   use QuantomelarischioWeb, :live_view
 
   @steps [
-    {"1", "Crea una nuova stanza"},
-    {"2", "Invia il link (max 2 idioti)"},
-    {"3", "Aspetta l'importo"},
-    {"4", "Piazza le scommesse"},
-    {"5", "Il vincitore è deciso!"}
+    {"1", "Crea una nuova stanza", "Scrivi la sfida e genera il tuo link."},
+    {"2", "Invia il link", "Un solo idiota per stanza. Max 2 giocatori."},
+    {"3", "Aspetta l'importo", "Lo sfidato decide quanto vale la stronzata (min 2)."},
+    {"4", "Piazza le scommesse", "Ognuno sceglie un numero da 1 a (importo − 1)."},
+    {"5", "Il vincitore è deciso!",
+     "Se i numeri combaciano o la somma fa l'importo → lo sfidato deve farlo."}
   ]
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, page_title: "Quantotelarischi?", steps: @steps)}
+    {:ok, assign(socket, page_title: "Quantotelarischi?", nav_step: nil, steps: @steps)}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="flex flex-1 flex-col gap-8">
-      <section class="rounded-[22px] border-2 border-ink bg-white p-7 shadow-hard">
-        <h1 class="text-center text-4xl font-extrabold uppercase leading-none tracking-tight text-ink">
-          Quantotelarischi<span class="text-accent">?</span>
-        </h1>
-        <p class="mt-3 text-center font-hand text-base text-ink/60">
-          Hai le palle o sei il solito cagasotto?
-        </p>
-        <.button navigate={~p"/new"} class="mt-6">Crea una stanza</.button>
-      </section>
+    <div class="animate-rise">
+      <div class="mb-8 inline-block rounded-full bg-brand-soft px-4 py-2 text-sm font-semibold uppercase tracking-widest text-brand-dark">
+        Party game · scommesse da idioti
+      </div>
+      <h1 class="font-display text-[clamp(64px,13vw,144px)] font-extrabold leading-[0.95] tracking-tight text-ink">
+        Quanto te la rischi<span class="text-brand">?</span>
+      </h1>
+      <p class="my-8 max-w-[620px] text-2xl leading-relaxed text-muted2">
+        Sfida un amico a fare una stronzata. Un numero decide chi si copre di ridicolo.
+        Hai le palle o sei il solito cagasotto?
+      </p>
+      <.button navigate={~p"/new"} class="max-w-md">
+        Crea una stanza <i class="ri-arrow-right-line text-2xl"></i>
+      </.button>
 
-      <section>
-        <h2 class="mb-4 text-center font-hand text-lg text-ink/60">— Come si gioca —</h2>
-        <ol class="flex flex-col gap-3">
-          <li :for={{num, label} <- @steps} class="flex items-center gap-3">
+      <div class="mt-20">
+        <div class="mb-6 text-sm font-semibold uppercase tracking-widest text-muted">
+          Come si gioca
+        </div>
+        <div class="flex flex-col">
+          <div
+            :for={{{num, title, desc}, idx} <- Enum.with_index(@steps)}
+            class={["flex items-start gap-5 py-6", idx < length(@steps) - 1 && "border-b border-line"]}
+          >
             <span class={[
-              "flex h-8 w-8 flex-none items-center justify-center rounded-full text-sm font-bold text-white",
-              num == "5" && "bg-accent",
-              num != "5" && "bg-ink"
+              "flex h-12 w-12 flex-none items-center justify-center rounded-full font-display text-xl font-bold",
+              num == "5" && "bg-brand text-white",
+              num != "5" && "bg-brand-soft text-brand-dark"
             ]}>
               {num}
             </span>
-            <span class="font-hand text-base text-ink/70">{label}</span>
-          </li>
-        </ol>
-      </section>
+            <div>
+              <div class="text-2xl font-semibold text-ink">{title}</div>
+              <div class="mt-1 text-lg text-muted">{desc}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     """
   end
