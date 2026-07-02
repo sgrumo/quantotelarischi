@@ -6,12 +6,6 @@ import Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :quantomelarischio, :allowed_origins, [
-  "http://localhost:3000",
-  "http://localhost:4321",
-  "http://localhost:5173",
-  "http://localhost:8080"
-]
 config :quantomelarischio, QuantomelarischioWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
@@ -20,7 +14,19 @@ config :quantomelarischio, QuantomelarischioWeb.Endpoint,
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "Ffk55onvNVxo5gkbLdasWD70xVYqZ/BJrYs5eVmOjVBwXCEr1l7vLFK14wBYshef",
-  watchers: []
+  watchers: [
+    esbuild: {Esbuild, :install_and_run, [:quantomelarischio, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:quantomelarischio, ~w(--watch)]}
+  ]
+
+# Watch static and templates for browser reloading.
+config :quantomelarischio, QuantomelarischioWeb.Endpoint,
+  live_reload: [
+    patterns: [
+      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"lib/quantomelarischio_web/(controllers|live|components)/.*(ex|heex)$"
+    ]
+  ]
 
 # ## SSL Support
 #

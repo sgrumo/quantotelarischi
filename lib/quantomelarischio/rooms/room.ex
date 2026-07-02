@@ -87,7 +87,7 @@ defmodule Quantomelarischio.Rooms.Room do
   end
 
   @spec accept_challenge(pos_integer(), t()) :: error()
-  def accept_challenge(challenge_amount, _state) when challenge_amount < 1 do
+  def accept_challenge(challenge_amount, _state) when challenge_amount < 2 do
     {:error, :invalid_challenge_bet_amount}
   end
 

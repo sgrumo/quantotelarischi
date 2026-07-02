@@ -9,7 +9,8 @@ defmodule Quantomelarischio.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      listeners: [Phoenix.CodeReloader]
     ]
   end
 
@@ -33,13 +34,26 @@ defmodule Quantomelarischio.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.8.8"},
+      {:phoenix_html, "~> 4.3"},
+      {:phoenix_live_view, "~> 1.2"},
       {:phoenix_live_dashboard, "~> 0.8.7"},
+      {:gettext, "~> 0.26"},
+      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.4", runtime: Mix.env() == :dev},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.2.0",
+       sparse: "optimized",
+       app: false,
+       compile: false,
+       depth: 1},
       {:telemetry_metrics, "~> 1.1"},
       {:telemetry_poller, "~> 1.3"},
       {:jason, "~> 1.4"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.12"},
-      {:cors_plug, "~> 3.0"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:lazy_html, ">= 0.1.0", only: :test},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
@@ -52,7 +66,14 @@ defmodule Quantomelarischio.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get"]
+      setup: ["deps.get", "assets.setup", "assets.build"],
+      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.build": ["tailwind quantomelarischio", "esbuild quantomelarischio"],
+      "assets.deploy": [
+        "tailwind quantomelarischio --minify",
+        "esbuild quantomelarischio --minify",
+        "phx.digest"
+      ]
     ]
   end
 end

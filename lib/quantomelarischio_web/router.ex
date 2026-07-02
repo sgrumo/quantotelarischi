@@ -1,23 +1,26 @@
 defmodule QuantomelarischioWeb.Router do
   use QuantomelarischioWeb, :router
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :put_user_id
+    plug :fetch_live_flash
+    plug :put_root_layout, html: {QuantomelarischioWeb.Layouts, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
   end
 
-  scope "/api", QuantomelarischioWeb do
-    pipe_through :api
+  scope "/", QuantomelarischioWeb do
+    pipe_through :browser
 
-    post "/rooms", RoomController, :create
+    live "/", HomeLive
+    live "/new", NewChallengeLive
+    live "/r/:room_id", RoomLive
   end
 
   # Enable LiveDashboard in development
   if Application.compile_env(:quantomelarischio, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
@@ -25,5 +28,18 @@ defmodule QuantomelarischioWeb.Router do
 
       live_dashboard "/dashboard", metrics: QuantomelarischioWeb.Telemetry
     end
+  end
+
+  # Assigns a stable, anonymous per-browser id used to claim a player slot in a room.
+  defp put_user_id(conn, _opts) do
+    if get_session(conn, :user_id) do
+      conn
+    else
+      put_session(conn, :user_id, generate_user_id())
+    end
+  end
+
+  defp generate_user_id do
+    :crypto.strong_rand_bytes(8) |> Base.url_encode64(padding: false)
   end
 end

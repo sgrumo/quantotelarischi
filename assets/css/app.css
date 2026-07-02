@@ -1,0 +1,32 @@
+@import "tailwindcss" source(none);
+
+@source "../css";
+@source "../js";
+@source "../../lib/quantomelarischio_web";
+
+/* Heroicons — generates `hero-*` utilities from deps/heroicons */
+@plugin "../vendor/heroicons";
+
+/* Quantotelarischi theme tokens (from the wireframe palette) */
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-hand: "Architects Daughter", cursive;
+
+  --color-paper: #eceae4;
+  --color-ink: #1a1a1a;
+  --color-accent: #e0531f;
+
+  --shadow-hard: 4px 5px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* Phone-frame shake on a losing verdict */
+@keyframes qtlr-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: qtlr-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}

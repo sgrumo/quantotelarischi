@@ -1,6 +1,20 @@
 defmodule Quantomelarischio.Rooms do
   alias Quantomelarischio.Rooms.RoomServer
 
+  @pubsub Quantomelarischio.PubSub
+
+  @doc "Subscribe the calling process to a room's state-change broadcasts."
+  def subscribe(room_id) do
+    Phoenix.PubSub.subscribe(@pubsub, RoomServer.topic(room_id))
+  end
+
+  @doc "Fetch the current room state. Returns {:error, :room_not_found} if absent."
+  def get_room(room_id) do
+    RoomServer.get_room(room_id)
+  catch
+    :exit, _ -> {:error, :room_not_found}
+  end
+
   def create_room(challenge_description) do
     room_id = generate_room_id()
 
@@ -15,12 +29,9 @@ defmodule Quantomelarischio.Rooms do
   end
 
   def join_room(room_id, user_id) do
-    case RoomServer.join(room_id, user_id) do
-      {:ok, roomInfo} -> {:ok, roomInfo}
-      {:error, :room_full} -> {:error, :room_full}
-      {:error, :user_already_inside} -> {:error, :user_already_inside}
-      {:error, :room_not_found} -> {:error, :room_not_found}
-    end
+    RoomServer.join(room_id, user_id)
+  catch
+    :exit, _ -> {:error, :room_not_found}
   end
 
   def leave_room(room_id, user_id) do
