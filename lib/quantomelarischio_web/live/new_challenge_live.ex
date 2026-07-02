@@ -43,13 +43,9 @@ defmodule QuantomelarischioWeb.NewChallengeLive do
         <.input
           field={@form[:challenge_description]}
           type="textarea"
-          label="La tua sfida"
           placeholder="…mungere una mucca davanti a tutti"
         />
-        <p class="mb-8 ml-1 mt-3 text-base text-muted">
-          Scrivi una stronzata. Più è assurda, meglio è.
-        </p>
-        <.button type="submit">
+        <.button class="mt-3" type="submit">
           Sfida un idiota <i class="ri-user-add-line text-2xl"></i>
         </.button>
       </.form>

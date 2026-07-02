@@ -13,8 +13,8 @@ defmodule QuantomelarischioWeb.RoomLiveTest do
   describe "HomeLive" do
     test "renders the landing and links to room creation", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/")
-      assert html =~ "Quantotelarischi"
-      assert html =~ "Come si gioca"
+      assert html =~ "Quanto te la rischi"
+      assert html =~ "Regole"
       assert html =~ ~p"/new"
     end
   end

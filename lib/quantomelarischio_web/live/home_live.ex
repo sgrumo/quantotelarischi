@@ -26,8 +26,7 @@ defmodule QuantomelarischioWeb.HomeLive do
         Quanto te la rischi<span class="text-brand">?</span>
       </h1>
       <p class="my-8 max-w-[620px] text-2xl leading-relaxed text-muted2">
-        Sfida un amico a fare una stronzata. Un numero decide chi si copre di ridicolo.
-        Hai le palle o sei il solito cagasotto?
+        Un numero decide chi si copre di ridicolo.
       </p>
       <.button navigate={~p"/new"} class="max-w-md">
         Crea una stanza <i class="ri-arrow-right-line text-2xl"></i>
@@ -35,7 +34,7 @@ defmodule QuantomelarischioWeb.HomeLive do
 
       <div class="mt-20">
         <div class="mb-6 text-sm font-semibold uppercase tracking-widest text-muted">
-          Come si gioca
+          Regole
         </div>
         <div class="flex flex-col">
           <div
