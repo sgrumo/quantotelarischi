@@ -12,47 +12,63 @@ defmodule QuantomelarischioWeb.HomeLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, page_title: "Quantotelarischi?", nav_step: nil, steps: @steps)}
+    {:ok,
+     assign(socket,
+       page_title: "Quantotelarischi?",
+       nav_step: nil,
+       full_viewport: true,
+       steps: @steps
+     )}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="animate-rise">
-      <div class="mb-8 inline-block rounded-full bg-brand-soft px-4 py-2 text-sm font-semibold uppercase tracking-widest text-brand-dark">
-        Party game · scommesse da idioti
+    <div class="mx-auto flex h-full w-full max-w-7xl animate-rise flex-col justify-center gap-8 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:gap-16">
+      <div class="flex flex-col justify-center lg:flex-1">
+        <img
+          src={~p"/images/hero.svg"}
+          alt=""
+          class="mb-4 h-[min(14rem,30dvh)] w-auto self-start sm:h-[min(20rem,36dvh)] lg:h-[min(26rem,42dvh)]"
+        />
+        <h1 class="font-display text-[clamp(44px,7.5vw,110px)] font-extrabold leading-[0.95] tracking-tight text-ink">
+          Quanto te la rischi<span class="text-brand">?</span>
+        </h1>
+        <p class="mt-5 max-w-[620px] text-xl leading-relaxed text-muted2 sm:text-2xl">
+          Un numero decide chi si copre di ridicolo.
+        </p>
       </div>
-      <h1 class="font-display text-[clamp(64px,13vw,144px)] font-extrabold leading-[0.95] tracking-tight text-ink">
-        Quanto te la rischi<span class="text-brand">?</span>
-      </h1>
-      <p class="my-8 max-w-[620px] text-2xl leading-relaxed text-muted2">
-        Un numero decide chi si copre di ridicolo.
-      </p>
-      <.button navigate={~p"/new"} class="max-w-md">
-        Crea una stanza <i class="ri-arrow-right-line text-2xl"></i>
-      </.button>
 
-      <div class="mt-20">
-        <div class="mb-6 text-sm font-semibold uppercase tracking-widest text-muted">
+      <div class="flex min-h-0 flex-col justify-center lg:flex-1">
+        <div class="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">
           Regole
         </div>
         <div class="flex flex-col">
           <div
             :for={{{num, title, desc}, idx} <- Enum.with_index(@steps)}
-            class={["flex items-start gap-5 py-6", idx < length(@steps) - 1 && "border-b border-line"]}
+            class={[
+              "flex items-start gap-4 py-2.5",
+              idx < length(@steps) - 1 && "border-b border-line"
+            ]}
           >
             <span class={[
-              "flex h-12 w-12 flex-none items-center justify-center rounded-full font-display text-xl font-bold",
+              "flex h-9 w-9 flex-none items-center justify-center rounded-full font-display text-base font-bold",
               num == "5" && "bg-brand text-white",
               num != "5" && "bg-brand-soft text-brand-dark"
             ]}>
               {num}
             </span>
             <div>
-              <div class="text-2xl font-semibold text-ink">{title}</div>
-              <div class="mt-1 text-lg text-muted">{desc}</div>
+              <div class="text-lg font-semibold leading-snug text-ink">{title}</div>
+              <div class="text-sm text-muted">{desc}</div>
             </div>
           </div>
+        </div>
+
+        <div class="mt-6">
+          <.button navigate={~p"/new"}>
+            Crea una stanza <i class="ri-arrow-right-line text-2xl"></i>
+          </.button>
         </div>
       </div>
     </div>
