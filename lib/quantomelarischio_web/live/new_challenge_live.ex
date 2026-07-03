@@ -7,7 +7,7 @@ defmodule QuantomelarischioWeb.NewChallengeLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(page_title: "Nuova stanza", nav_step: 1)
+     |> assign(page_title: "Nuova stanza", nav_step: 1, full_viewport: true)
      |> assign(form: to_form(%{"challenge_description" => ""}))}
   end
 
@@ -31,11 +31,11 @@ defmodule QuantomelarischioWeb.NewChallengeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="animate-rise mx-auto max-w-2xl">
+    <div class="mx-auto flex h-full w-full max-w-2xl animate-rise flex-col justify-center px-5 py-4 sm:px-6">
       <div class="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">
         Nuova stanza
       </div>
-      <h2 class="mb-8 font-display text-[clamp(38px,8vw,68px)] font-bold leading-[1.02] tracking-tight text-ink">
+      <h2 class="mb-5 font-display text-[clamp(38px,8vw,68px)] font-bold leading-[1.02] tracking-tight text-ink sm:mb-8">
         Quanto te la rischi a…
       </h2>
 

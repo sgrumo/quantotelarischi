@@ -78,6 +78,13 @@ defmodule Quantomelarischio.Rooms do
     end
   end
 
+  @doc "Close the room for everyone. Subscribers receive {:room_closed, room_id}."
+  def close_room(room_id) do
+    RoomServer.close(room_id)
+  catch
+    :exit, _ -> :ok
+  end
+
   def list_active_rooms() do
     Quantomelarischio.RoomSupervisor
     |> DynamicSupervisor.which_children()

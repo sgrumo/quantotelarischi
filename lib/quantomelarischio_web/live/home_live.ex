@@ -16,7 +16,7 @@ defmodule QuantomelarischioWeb.HomeLive do
      assign(socket,
        page_title: "Quantotelarischi?",
        nav_step: nil,
-       full_viewport: true,
+       full_viewport: :desktop,
        steps: @steps
      )}
   end
@@ -24,12 +24,12 @@ defmodule QuantomelarischioWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="mx-auto flex h-full w-full max-w-7xl animate-rise flex-col justify-center gap-8 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:gap-16">
+    <div class="mx-auto flex w-full max-w-7xl animate-rise flex-col gap-8 px-5 py-8 sm:px-8 lg:h-full lg:flex-row lg:items-center lg:justify-center lg:gap-16 lg:py-4">
       <div class="flex flex-col justify-center lg:flex-1">
         <img
           src={~p"/images/hero.svg"}
           alt=""
-          class="mb-4 h-[min(14rem,30dvh)] w-auto self-start sm:h-[min(20rem,36dvh)] lg:h-[min(26rem,42dvh)]"
+          class="mb-4 h-[min(14rem,30dvh)] w-auto self-center sm:h-[min(20rem,36dvh)] lg:h-[min(26rem,42dvh)] lg:self-start"
         />
         <h1 class="font-display text-[clamp(44px,7.5vw,110px)] font-extrabold leading-[0.95] tracking-tight text-ink">
           Quanto te la rischi<span class="text-brand">?</span>
@@ -65,7 +65,7 @@ defmodule QuantomelarischioWeb.HomeLive do
           </div>
         </div>
 
-        <div class="mt-6">
+        <div class="order-first mb-8 lg:order-none lg:mb-0 lg:mt-6">
           <.button navigate={~p"/new"}>
             Crea una stanza <i class="ri-arrow-right-line text-2xl"></i>
           </.button>

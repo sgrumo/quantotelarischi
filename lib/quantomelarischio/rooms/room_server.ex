@@ -1,5 +1,5 @@
 defmodule Quantomelarischio.Rooms.RoomServer do
-  use GenServer
+  use GenServer, restart: :transient
   alias Quantomelarischio.Rooms.Room
 
   @pubsub Quantomelarischio.PubSub
@@ -49,6 +49,10 @@ defmodule Quantomelarischio.Rooms.RoomServer do
 
   def reset_game(room_id) do
     GenServer.call(via_tuple(room_id), :reset_game)
+  end
+
+  def close(room_id) do
+    GenServer.call(via_tuple(room_id), :close)
   end
 
   @impl true
@@ -134,6 +138,12 @@ defmodule Quantomelarischio.Rooms.RoomServer do
   def handle_call(:reset_game, _from, state) do
     {:ok, new_state} = Room.reset_game(state)
     {:reply, :ok, broadcast(new_state)}
+  end
+
+  @impl true
+  def handle_call(:close, _from, %Room{room_id: room_id} = state) do
+    Phoenix.PubSub.broadcast(@pubsub, topic(room_id), {:room_closed, room_id})
+    {:stop, :normal, :ok, state}
   end
 
   @impl true

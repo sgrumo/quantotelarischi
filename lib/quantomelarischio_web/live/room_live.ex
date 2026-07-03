@@ -14,7 +14,8 @@ defmodule QuantomelarischioWeb.RoomLive do
         user_id: user_id,
         amount: 2,
         pick: 1,
-        page_title: "Stanza"
+        page_title: "Stanza",
+        full_viewport: true
       )
 
     if connected?(socket) do
@@ -42,6 +43,11 @@ defmodule QuantomelarischioWeb.RoomLive do
   end
 
   @impl true
+  def handle_info({:room_closed, _room_id}, socket) do
+    {:noreply, push_navigate(socket, to: ~p"/")}
+  end
+
+  @impl true
   def handle_event("amount_change", %{"amount" => amount}, socket) do
     {:noreply, assign(socket, :amount, parse_int(amount, socket.assigns.amount))}
   end
@@ -66,8 +72,8 @@ defmodule QuantomelarischioWeb.RoomLive do
   end
 
   def handle_event("reset", _params, socket) do
-    Rooms.reset_game(socket.assigns.room_id)
-    {:noreply, assign(socket, amount: 2, pick: 1)}
+    Rooms.close_room(socket.assigns.room_id)
+    {:noreply, push_navigate(socket, to: ~p"/")}
   end
 
   @impl true
@@ -84,7 +90,7 @@ defmodule QuantomelarischioWeb.RoomLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="animate-rise mx-auto max-w-2xl">
+    <div class="mx-auto flex h-full w-full max-w-2xl animate-rise flex-col justify-center px-5 py-4 sm:px-6">
       <%= case @phase do %>
         <% :loading -> %>
           <div class="rounded-3xl border border-line bg-white p-8 text-center text-xl text-muted shadow-card">
@@ -107,13 +113,12 @@ defmodule QuantomelarischioWeb.RoomLive do
   # Screen 2 — lobby: challenger waiting for a second player.
   defp lobby(assigns) do
     ~H"""
-    <.room_header room_id={@room_id} />
-    <div class="rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
-      <.challenge_box text={@room.challenge_description} label="La tua sfida" />
+    <div class="rounded-3xl border border-line bg-white p-5 shadow-card sm:p-8">
+      <.challenge_box text={@room.challenge_description} label="Quanto te la rischi a" />
 
-      <div class="mb-2 text-base text-muted">Link condivisibile</div>
-      <div class="mb-6 flex gap-2.5">
-        <div class="flex min-w-0 flex-1 items-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-line2 bg-paper px-5 py-3.5 text-base text-muted2">
+      <div class="mb-2 text-sm text-muted sm:text-base">Link condivisibile</div>
+      <div class="mb-4 flex flex-col gap-2.5 sm:mb-6 sm:flex-row">
+        <div class="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-line2 bg-paper px-5 py-3.5 text-base text-muted2 sm:flex sm:flex-1 sm:items-center">
           {share_url(@room_id)}
         </div>
         <button
@@ -122,18 +127,18 @@ defmodule QuantomelarischioWeb.RoomLive do
           phx-hook="CopyLink"
           data-clipboard={share_url(@room_id)}
           aria-label="Copia il link della stanza"
-          class="flex flex-none items-center gap-2 rounded-full bg-ink px-6 text-base font-semibold text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/30"
+          class="flex flex-none items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-base font-semibold text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/30 sm:py-0"
         >
-          <i class="ri-file-copy-line text-lg"></i>Copia
+          Copia link<i class="ri-file-copy-line text-lg"></i>
         </button>
       </div>
 
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-2.5 sm:gap-3">
         <.player_slot name="Tu · lo sfidante" state="in" />
         <.player_slot name="In attesa dell'idiota" state="empty" />
       </div>
 
-      <p class="mt-6 text-center text-lg italic text-muted">
+      <p class="mt-4 text-center text-base italic text-muted sm:mt-6 sm:text-lg">
         "In attesa che un coglione abbocchi…"
       </p>
     </div>
@@ -147,7 +152,7 @@ defmodule QuantomelarischioWeb.RoomLive do
       Lo sfidato decide
     </div>
     <.challenge_box text={@room.challenge_description} />
-    <h2 class="mb-8 font-display text-[clamp(34px,7vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
+    <h2 class="mb-4 font-display text-[clamp(28px,6vw,56px)] font-bold leading-[1.05] tracking-tight text-ink sm:mb-8">
       Quanto vale questa stronzata?
     </h2>
 
@@ -161,9 +166,11 @@ defmodule QuantomelarischioWeb.RoomLive do
         min="2"
         inputmode="numeric"
         autocomplete="off"
-        class="no-spin w-full rounded-3xl border border-line2 bg-white py-7 text-center font-display text-[clamp(72px,20vw,120px)] font-extrabold leading-none text-ink focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15"
+        class="no-spin w-full rounded-3xl border border-line2 bg-white py-4 text-center font-display text-[clamp(56px,16vw,120px)] font-extrabold leading-none text-ink focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 sm:py-7"
       />
-      <p class="mb-8 mt-4 text-center text-base text-muted">Importo minimo: 2 · premi Invio per bloccare</p>
+      <p class="mb-4 mt-3 text-center text-base text-muted sm:mb-8 sm:mt-4">
+        Importo minimo: 2 · premi Invio per bloccare
+      </p>
       <.button type="submit">
         SCOMMETTI <i class="ri-lock-line text-2xl"></i>
       </.button>
@@ -173,16 +180,15 @@ defmodule QuantomelarischioWeb.RoomLive do
 
   defp set_amount(assigns) do
     ~H"""
-    <.room_header room_id={@room_id} />
-    <div class="rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
-      <.challenge_box text={@room.challenge_description} label="La tua sfida" />
-      <div class="flex flex-col gap-3">
+    <div class="rounded-3xl border border-line bg-white p-5 shadow-card sm:p-8">
+      <.challenge_box text={@room.challenge_description} label="Quanto te la rischi a" />
+      <div class="flex flex-col gap-2.5 sm:gap-3">
         <.player_slot name="Tu · lo sfidante" state="in" />
         <.player_slot name="L'idiota · lo sfidato" state="in" />
       </div>
-      <div class="mt-7 text-center">
+      <div class="mt-5 text-center sm:mt-7">
         <i class="ri-loader-4-line animate-spin-slow text-4xl text-brand"></i>
-        <p class="mt-4 text-lg leading-snug text-muted">
+        <p class="mt-3 text-base leading-snug text-muted sm:mt-4 sm:text-lg">
           "L'idiota sta decidendo quanto vali… aspetta, pezzo di merda."
         </p>
       </div>
@@ -203,21 +209,21 @@ defmodule QuantomelarischioWeb.RoomLive do
         </p>
       </div>
     <% else %>
-      <div class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted">
+      <div class="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted sm:mb-3">
         <i class="ri-eye-off-line text-base"></i>In segreto
       </div>
       <.challenge_box text={@room.challenge_description} />
-      <h2 class="mb-3 font-display text-[clamp(34px,7vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
+      <h2 class="mb-2 font-display text-[clamp(28px,6vw,56px)] font-bold leading-[1.05] tracking-tight text-ink sm:mb-3">
         Scegli il tuo numero
       </h2>
-      <div class="mb-8 flex justify-start">
-        <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-2 text-lg font-semibold text-ink">
+      <div class="mb-4 flex justify-start sm:mb-8">
+        <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-1.5 text-base font-semibold text-ink sm:py-2 sm:text-lg">
           <i class="ri-coins-line text-brand"></i>Posta: {@room.challenge_amount}
         </span>
       </div>
 
       <form id="pick-form" phx-submit="place_bet" phx-change="pick_change">
-        <label for="pick" class="mb-3 block text-xl text-muted">
+        <label for="pick" class="mb-2 block text-lg text-muted sm:mb-3 sm:text-xl">
           Un numero da 1 a {max_pick(@room)}.
         </label>
         <input
@@ -229,9 +235,9 @@ defmodule QuantomelarischioWeb.RoomLive do
           max={max_pick(@room)}
           inputmode="numeric"
           autocomplete="off"
-          class="no-spin w-full rounded-3xl border border-line2 bg-white py-7 text-center font-display text-[clamp(72px,20vw,120px)] font-extrabold leading-none text-brand focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15"
+          class="no-spin w-full rounded-3xl border border-line2 bg-white py-4 text-center font-display text-[clamp(56px,16vw,120px)] font-extrabold leading-none text-brand focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 sm:py-7"
         />
-        <.button type="submit" class="mt-8">
+        <.button type="submit" class="mt-5 sm:mt-8">
           Conferma il numero <i class="ri-check-line text-2xl"></i>
         </.button>
       </form>
@@ -262,7 +268,7 @@ defmodule QuantomelarischioWeb.RoomLive do
       phx-hook="Verdict"
       data-mustdo={to_string(@must_do)}
       class={[
-        "mt-3 rounded-3xl border border-line bg-white p-6 shadow-verdict sm:p-8",
+        "rounded-3xl border border-line bg-white p-5 shadow-verdict sm:mt-3 sm:p-8",
         @must_do && "animate-shake"
       ]}
     >
@@ -272,18 +278,18 @@ defmodule QuantomelarischioWeb.RoomLive do
         center={true}
       />
 
-      <div class="mb-5 flex justify-center">
-        <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-2 text-lg font-semibold text-ink">
+      <div class="mb-3 flex justify-center sm:mb-5">
+        <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-1.5 text-base font-semibold text-ink sm:py-2 sm:text-lg">
           <i class="ri-coins-line text-brand"></i>Posta: {@pot}
         </span>
       </div>
 
-      <div class="mb-6 flex items-stretch gap-4">
+      <div class="mb-3 flex items-stretch gap-3 sm:mb-6 sm:gap-4">
         <.verdict_number caption={left_caption(@role)} value={@a} />
         <.verdict_number caption={right_caption(@role)} value={@b} />
       </div>
 
-      <div class="mb-6 flex flex-col gap-2.5">
+      <div class="mb-3 flex flex-col gap-2 sm:mb-6 sm:gap-2.5">
         <.verdict_row hit={@sum_hit}>
           <:label>Somma · {@a} + {@b} = {@a + @b}</:label>
           <:verb>{if @sum_hit, do: "= #{@pot}", else: "≠ #{@pot}"}</:verb>
@@ -295,19 +301,19 @@ defmodule QuantomelarischioWeb.RoomLive do
       </div>
 
       <div class={[
-        "flex w-full items-center justify-center gap-3 rounded-3xl border p-7 font-display text-[clamp(30px,7vw,44px)] font-extrabold leading-none tracking-tight",
+        "flex w-full items-center justify-center gap-3 rounded-3xl border p-4 font-display text-[clamp(26px,6vw,44px)] font-extrabold leading-none tracking-tight sm:p-7",
         @must_do && "border-bad-line bg-bad-bg text-bad",
         !@must_do && "border-good-line bg-good-bg text-good"
       ]}>
         <i class={if @must_do, do: "ri-emotion-normal-line", else: "ri-emotion-laugh-line"} style="font-size:36px"></i>
         {verdict_text(@role, @must_do)}
       </div>
-      <p :if={@must_do} class="mt-4 text-center text-lg italic text-muted">
+      <p :if={@must_do} class="mt-3 text-center text-base italic text-muted sm:mt-4 sm:text-lg">
         Niente scuse, coglione. Ora esegui.
       </p>
     </div>
 
-    <.button variant="ghost" phx-click="reset" class="mt-5">
+    <.button variant="ghost" phx-click="reset" class="mt-3 sm:mt-5">
       <i class="ri-restart-line text-2xl"></i>Rigioca
     </.button>
     """
@@ -315,31 +321,25 @@ defmodule QuantomelarischioWeb.RoomLive do
 
   ## Shared pieces
 
-  attr :room_id, :string, required: true
-
-  defp room_header(assigns) do
-    ~H"""
-    <div class="mb-6 flex items-center justify-between">
-      <div class="text-sm font-semibold uppercase tracking-widest text-muted">La stanza</div>
-      <span class="rounded-full bg-brand-soft px-4 py-1.5 font-display text-base font-semibold text-brand">
-        #{String.upcase(@room_id)}
-      </span>
-    </div>
-    """
-  end
-
   attr :text, :string, required: true
-  attr :label, :string, default: "La sfida"
+  attr :label, :string, default: nil
   attr :center, :boolean, default: false
 
   defp challenge_box(assigns) do
     ~H"""
     <div class={[
-      "mb-6 rounded-2xl border border-line bg-paper px-5 py-5",
+      "mb-4 rounded-2xl border border-line bg-paper px-5 py-4 sm:mb-6 sm:py-5",
       @center && "text-center"
     ]}>
-      <div class="text-xs font-semibold uppercase tracking-wider text-brand">{@label}</div>
-      <div class="mt-1.5 font-display text-2xl font-medium leading-snug text-ink">{@text}</div>
+      <div :if={@label} class="text-xs font-semibold uppercase tracking-wider text-brand">
+        {@label}
+      </div>
+      <div class={[
+        "font-display text-2xl font-medium leading-snug text-ink",
+        @label && "mt-1.5"
+      ]}>
+        {@text}
+      </div>
     </div>
     """
   end
@@ -349,7 +349,7 @@ defmodule QuantomelarischioWeb.RoomLive do
 
   defp player_slot(%{state: "in"} = assigns) do
     ~H"""
-    <div class="flex items-center gap-4 rounded-2xl border border-brand-soft bg-white p-4">
+    <div class="flex items-center gap-4 rounded-2xl border border-brand-soft bg-white p-3 sm:p-4">
       <span class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-brand font-display text-lg font-bold text-white">
         {String.first(@name)}
       </span>
@@ -364,7 +364,7 @@ defmodule QuantomelarischioWeb.RoomLive do
 
   defp player_slot(assigns) do
     ~H"""
-    <div class="flex items-center gap-4 rounded-2xl border border-dashed border-line2 bg-paper p-4">
+    <div class="flex items-center gap-4 rounded-2xl border border-dashed border-line2 bg-paper p-3 sm:p-4">
       <span class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-line text-faint">
         <i class="ri-question-mark text-xl"></i>
       </span>
@@ -383,8 +383,8 @@ defmodule QuantomelarischioWeb.RoomLive do
   defp verdict_number(assigns) do
     ~H"""
     <div class="flex-1 text-center">
-      <div class="mb-2 text-sm font-medium text-muted">{@caption}</div>
-      <div class="rounded-2xl border border-line bg-paper py-6 font-display text-[clamp(48px,13vw,84px)] font-extrabold leading-none text-ink">
+      <div class="mb-1.5 text-sm font-medium text-muted sm:mb-2">{@caption}</div>
+      <div class="rounded-2xl border border-line bg-paper py-3 font-display text-[clamp(40px,11vw,84px)] font-extrabold leading-none text-ink sm:py-6">
         {@value}
       </div>
     </div>
@@ -398,7 +398,7 @@ defmodule QuantomelarischioWeb.RoomLive do
   defp verdict_row(assigns) do
     ~H"""
     <div class={[
-      "flex items-center justify-between rounded-2xl border px-5 py-4 text-lg font-medium",
+      "flex items-center justify-between rounded-2xl border px-4 py-2.5 text-base font-medium sm:px-5 sm:py-4 sm:text-lg",
       @hit && "border-good-line bg-good-bg text-good",
       !@hit && "border-line bg-paper text-faint"
     ]}>

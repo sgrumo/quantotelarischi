@@ -16,7 +16,7 @@ Hooks.CopyLink = {
       let text = this.el.dataset.clipboard
       navigator.clipboard?.writeText(text)
       let original = this.el.innerHTML
-      this.el.innerText = "Fatto"
+      this.el.innerHTML = `Link copiato<i class="ri-check-line text-lg"></i>`
       setTimeout(() => (this.el.innerHTML = original), 1400)
     })
   }

@@ -71,9 +71,11 @@ defmodule QuantomelarischioWeb.RoomLiveTest do
       assert render(p1) =~ "LO DEVE FARE"
       assert render(p2) =~ "ORA LO FAI"
 
-      # Rigioca resets both back to the amount step.
+      # Rigioca closes the room and sends both players back home.
       render_click(p1, "reset")
-      assert render(p2) =~ "Quanto vale questa stronzata"
+      assert_redirect(p1, "/")
+      assert_redirect(p2, "/")
+      assert {:error, :room_not_found} = Rooms.get_room(room_id)
     end
 
     test "a third visitor is bounced from a full room", %{room_id: room_id} do
