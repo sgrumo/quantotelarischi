@@ -1,14 +1,15 @@
 services:
   app:
-    image: ghcr.io/sgrumo/quantotelarischi-be:latest
+    image: ghcr.io/sgrumo/quantotelarischi:latest
+    container_name: quantotela-app
     restart: unless-stopped
+    networks:
+      - web
     env_file:
       - .env
     environment:
       PHX_SERVER: "true"
       PORT: "4000"
-    ports:
-      - "4001:4000"
     healthcheck:
       test: ["CMD", "/app/bin/quantomelarischio", "rpc", "1 + 1"]
       interval: 30s
@@ -20,3 +21,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+networks:
+  web:
+    name: web
+    external: true
