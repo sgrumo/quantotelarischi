@@ -252,9 +252,6 @@ defmodule QuantomelarischioWeb.RoomLive do
       )
 
     ~H"""
-    <div class="text-center text-sm font-semibold uppercase tracking-widest text-muted">
-      Il verdetto
-    </div>
     <div :if={@must_do} class="red-flash"></div>
     <div
       id="verdict-card"
@@ -265,7 +262,11 @@ defmodule QuantomelarischioWeb.RoomLive do
         @must_do && "animate-shake"
       ]}
     >
-      <.challenge_box text={@room.challenge_description} center={true} />
+      <.challenge_box
+        text={@room.challenge_description}
+        label="Quanto te la rischi a"
+        center={true}
+      />
 
       <div class="mb-5 flex justify-center">
         <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-2 text-lg font-semibold text-ink">
@@ -275,7 +276,6 @@ defmodule QuantomelarischioWeb.RoomLive do
 
       <div class="mb-6 flex items-stretch gap-4">
         <.verdict_number caption={left_caption(@role)} value={@a} />
-        <div class="flex flex-none items-center font-display text-4xl font-bold text-line2">+</div>
         <.verdict_number caption={right_caption(@role)} value={@b} />
       </div>
 
