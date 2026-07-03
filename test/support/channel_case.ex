@@ -19,11 +19,9 @@ defmodule QuantomelarischioWeb.ChannelCase do
 
   using do
     quote do
-      # Import conveniences for testing with channels
       import Phoenix.ChannelTest
       import QuantomelarischioWeb.ChannelCase
 
-      # The default endpoint for testing
       @endpoint QuantomelarischioWeb.Endpoint
     end
   end

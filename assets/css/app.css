@@ -7,7 +7,6 @@
 /* Heroicons — generates `hero-*` utilities from deps/heroicons */
 @plugin "../vendor/heroicons";
 
-/* Quantotelarischi theme tokens (from Quantotelarischi.dc.html) */
 @theme {
   --font-sans: "Funnel Sans", system-ui, sans-serif;
   --font-display: "Funnel Display", system-ui, sans-serif;
@@ -38,7 +37,6 @@
   --shadow-verdict: 0 16px 24px -4px rgba(30, 41, 59, 0.16);
 }
 
-/* Screen transitions and verdict effects (ported from the design) */
 @keyframes qrise {
   0% { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -66,7 +64,6 @@
 /* inline-block so the transform-based rotation applies to inline <i> icons */
 .animate-spin-slow { display: inline-block; animation: qspin 1s linear infinite; }
 
-/* Clean typed number field — no native +/- spinners */
 input[type="number"].no-spin {
   -moz-appearance: textfield;
   appearance: textfield;

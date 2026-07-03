@@ -19,12 +19,10 @@ defmodule QuantomelarischioWeb.ConnCase do
 
   using do
     quote do
-      # The default endpoint for testing
       @endpoint QuantomelarischioWeb.Endpoint
 
       use QuantomelarischioWeb, :verified_routes
 
-      # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
       import QuantomelarischioWeb.ConnCase

@@ -19,7 +19,6 @@ defmodule QuantomelarischioWeb.Router do
     live "/r/:room_id", RoomLive
   end
 
-  # Enable LiveDashboard in development
   if Application.compile_env(:quantomelarischio, :dev_routes) do
     import Phoenix.LiveDashboard.Router
 

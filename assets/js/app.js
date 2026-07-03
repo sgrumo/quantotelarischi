@@ -1,7 +1,5 @@
-// Quantotelarischi LiveView client.
-//
-// Bundled by esbuild (no Node toolchain). Vendored JS deps are resolved from
-// the `deps/` directory via the NODE_PATH set in config/config.exs.
+// Bundled by esbuild (no Node toolchain); imports resolve from `deps/` via the
+// NODE_PATH set in config/config.exs.
 import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
@@ -12,7 +10,6 @@ let csrfToken = document
 
 let Hooks = {}
 
-// Copy-to-clipboard for the shareable room link.
 Hooks.CopyLink = {
   mounted() {
     this.el.addEventListener("click", () => {
@@ -25,8 +22,6 @@ Hooks.CopyLink = {
   }
 }
 
-// Verdict sounds: "DEVI FARLO" plays "bruh", "TE LA SEI SCAMPATA" plays the
-// relieved "faaah". Ported from the design.
 Hooks.Verdict = {
   mounted() {
     if (this.el.dataset.mustdo === "true") {

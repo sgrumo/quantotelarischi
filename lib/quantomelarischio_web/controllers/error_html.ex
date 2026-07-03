@@ -4,7 +4,6 @@ defmodule QuantomelarischioWeb.ErrorHTML do
   """
   use QuantomelarischioWeb, :html
 
-  # Renders the status message for an error page, e.g. "404 Not Found".
   def render(template, _assigns) do
     Phoenix.Controller.status_message_from_template(template)
   end

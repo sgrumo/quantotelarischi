@@ -1,9 +1,7 @@
 defmodule QuantomelarischioWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :quantomelarischio
 
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
+  # Signed but not encrypted: the cookie is tamper-proof yet readable by the client.
   @session_options [
     store: :cookie,
     key: "_quantomelarischio_key",
@@ -15,18 +13,12 @@ defmodule QuantomelarischioWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
-  # Serve at "/" the static files from "priv/static" directory.
-  #
-  # You should set gzip to true if you are running phx.digest
-  # when deploying your static files in production.
   plug Plug.Static,
     at: "/",
     from: :quantomelarischio,
     gzip: false,
     only: QuantomelarischioWeb.static_paths()
 
-  # Code reloading can be explicitly enabled under the
-  # :code_reloader configuration of your endpoint.
   if code_reloading? do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader

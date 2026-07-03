@@ -161,8 +161,7 @@ defmodule Quantomelarischio.Rooms.RoomServer do
     {:noreply, state}
   end
 
-  # Broadcasts the latest room state to subscribers and returns it unchanged so it
-  # can be threaded straight into the GenServer reply tuple.
+  # Returns the state unchanged so it threads into GenServer reply tuples.
   defp broadcast(%Room{room_id: room_id} = state) do
     Phoenix.PubSub.broadcast(@pubsub, topic(room_id), {:room_updated, state})
     state
