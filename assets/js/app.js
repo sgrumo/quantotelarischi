@@ -25,40 +25,20 @@ Hooks.CopyLink = {
   }
 }
 
-// On a losing verdict ("DEVI FARLO"), play a synthesized fart. Ported from the design.
+// Verdict sounds: "DEVI FARLO" plays "bruh", "TE LA SEI SCAMPATA" plays the
+// relieved "faaah". Ported from the design.
 Hooks.Verdict = {
   mounted() {
-    if (this.el.dataset.mustdo === "true") this.playFart()
+    if (this.el.dataset.mustdo === "true") {
+      this.playSound("/assets/bruh.mp3")
+    } else {
+      this.playSound("/assets/faaah.mp3")
+    }
   },
-  playFart() {
+  playSound(src) {
     try {
-      let Ctx = window.AudioContext || window.webkitAudioContext
-      let ctx = new Ctx()
-      let dur = 0.65
-      let now = ctx.currentTime
-      let o = ctx.createOscillator()
-      let g = ctx.createGain()
-      o.type = "sawtooth"
-      o.frequency.setValueAtTime(155, now)
-      o.frequency.exponentialRampToValueAtTime(55, now + dur)
-      let lfo = ctx.createOscillator()
-      let lfoGain = ctx.createGain()
-      lfo.type = "square"
-      lfo.frequency.setValueAtTime(22, now)
-      lfo.frequency.exponentialRampToValueAtTime(9, now + dur)
-      lfoGain.gain.value = 48
-      lfo.connect(lfoGain)
-      lfoGain.connect(o.frequency)
-      g.gain.setValueAtTime(0.0001, now)
-      g.gain.exponentialRampToValueAtTime(0.42, now + 0.05)
-      g.gain.exponentialRampToValueAtTime(0.0001, now + dur)
-      o.connect(g)
-      g.connect(ctx.destination)
-      o.start(now)
-      lfo.start(now)
-      o.stop(now + dur)
-      lfo.stop(now + dur)
-      setTimeout(() => { try { ctx.close() } catch (e) {} }, 900)
+      let audio = new Audio(src)
+      audio.play().catch(() => {})
     } catch (e) {}
   }
 }

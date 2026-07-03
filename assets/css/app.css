@@ -63,7 +63,8 @@
 
 .animate-rise { animation: qrise 0.35s ease-out; }
 .animate-shake { animation: qshake 0.5s ease-in-out; }
-.animate-spin-slow { animation: qspin 1s linear infinite; }
+/* inline-block so the transform-based rotation applies to inline <i> icons */
+.animate-spin-slow { display: inline-block; animation: qspin 1s linear infinite; }
 
 /* Clean typed number field — no native +/- spinners */
 input[type="number"].no-spin {
@@ -82,5 +83,8 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
   background: #dc2626;
   pointer-events: none;
   z-index: 60;
+  /* transparent by default; the animation flashes it once. Without this the
+     overlay reverts to opacity:1 after the animation and covers the screen. */
+  opacity: 0;
   animation: qflash 0.55s ease-out;
 }

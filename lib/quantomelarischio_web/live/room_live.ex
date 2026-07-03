@@ -165,7 +165,7 @@ defmodule QuantomelarischioWeb.RoomLive do
       />
       <p class="mb-8 mt-4 text-center text-base text-muted">Importo minimo: 2 · premi Invio per bloccare</p>
       <.button type="submit">
-        Blocca l'importo <i class="ri-lock-line text-2xl"></i>
+        SCOMMETTI <i class="ri-lock-line text-2xl"></i>
       </.button>
     </form>
     """
@@ -197,9 +197,9 @@ defmodule QuantomelarischioWeb.RoomLive do
     ~H"""
     <%= if @placed do %>
       <div class="rounded-3xl border border-line bg-white p-8 text-center shadow-card">
-        <i class="ri-lock-2-line text-4xl text-brand"></i>
+        <i class="ri-loader-4-line animate-spin-slow text-4xl text-brand"></i>
         <p class="mt-4 text-lg leading-snug text-muted">
-          Numero bloccato. Aspetta l'altro coglione…
+          {waiting_for(@role)}
         </p>
       </div>
     <% else %>
@@ -207,15 +207,19 @@ defmodule QuantomelarischioWeb.RoomLive do
         <i class="ri-eye-off-line text-base"></i>In segreto
       </div>
       <.challenge_box text={@room.challenge_description} />
-      <h2 class="mb-2 font-display text-[clamp(34px,7vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
+      <h2 class="mb-3 font-display text-[clamp(34px,7vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
         Scegli il tuo numero
       </h2>
-      <p class="mb-8 text-xl text-muted">
-        Un numero da 1 a {max_pick(@room)}. Non farti fregare.
-      </p>
+      <div class="mb-8 flex justify-start">
+        <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-2 text-lg font-semibold text-ink">
+          <i class="ri-coins-line text-brand"></i>Posta: {@room.challenge_amount}
+        </span>
+      </div>
 
       <form id="pick-form" phx-submit="place_bet" phx-change="pick_change">
-        <label for="pick" class="sr-only">Il tuo numero segreto</label>
+        <label for="pick" class="mb-3 block text-xl text-muted">
+          Un numero da 1 a {max_pick(@room)}.
+        </label>
         <input
           id="pick"
           type="number"
@@ -252,9 +256,6 @@ defmodule QuantomelarischioWeb.RoomLive do
       )
 
     ~H"""
-    <div class="text-center text-sm font-semibold uppercase tracking-widest text-muted">
-      Il verdetto
-    </div>
     <div :if={@must_do} class="red-flash"></div>
     <div
       id="verdict-card"
@@ -265,7 +266,11 @@ defmodule QuantomelarischioWeb.RoomLive do
         @must_do && "animate-shake"
       ]}
     >
-      <.challenge_box text={@room.challenge_description} center={true} />
+      <.challenge_box
+        text={@room.challenge_description}
+        label="Quanto te la rischi a"
+        center={true}
+      />
 
       <div class="mb-5 flex justify-center">
         <span class="inline-flex items-center gap-2 rounded-full border border-line2 px-5 py-2 text-lg font-semibold text-ink">
@@ -275,7 +280,6 @@ defmodule QuantomelarischioWeb.RoomLive do
 
       <div class="mb-6 flex items-stretch gap-4">
         <.verdict_number caption={left_caption(@role)} value={@a} />
-        <div class="flex flex-none items-center font-display text-4xl font-bold text-line2">+</div>
         <.verdict_number caption={right_caption(@role)} value={@b} />
       </div>
 
@@ -296,12 +300,10 @@ defmodule QuantomelarischioWeb.RoomLive do
         !@must_do && "border-good-line bg-good-bg text-good"
       ]}>
         <i class={if @must_do, do: "ri-emotion-normal-line", else: "ri-emotion-laugh-line"} style="font-size:36px"></i>
-        {if @must_do, do: "DEVI FARLO", else: "TE LA SEI SCAMPATA"}
+        {verdict_text(@role, @must_do)}
       </div>
-      <p class="mt-4 text-center text-lg italic text-muted">
-        {if @must_do,
-          do: "Niente scuse, coglione. Ora esegui.",
-          else: "Culo sfacciato. Stavolta l'hai scampata."}
+      <p :if={@must_do} class="mt-4 text-center text-lg italic text-muted">
+        Niente scuse, coglione. Ora esegui.
       </p>
     </div>
 
@@ -465,6 +467,14 @@ defmodule QuantomelarischioWeb.RoomLive do
   defp my_bet(%Room{challenger_bet_amount: amount}, :challenger), do: amount
   defp my_bet(%Room{challenged_bet_amount: amount}, :challenged), do: amount
   defp my_bet(_room, _role), do: nil
+
+  defp waiting_for(:challenger), do: "Aspettando lo sfidato…"
+  defp waiting_for(_role), do: "Aspettando lo sfidante…"
+
+  defp verdict_text(:challenger, true), do: "LO DEVE FARE"
+  defp verdict_text(:challenger, false), do: "SE L'È SCAMPATA"
+  defp verdict_text(_role, true), do: "ORA LO FAI"
+  defp verdict_text(_role, false), do: "TE LA SEI SCAMPATA"
 
   defp max_pick(%Room{challenge_amount: nil}), do: 1
   defp max_pick(%Room{challenge_amount: amount}), do: max(1, amount - 1)

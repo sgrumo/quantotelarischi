@@ -63,13 +63,13 @@ defmodule QuantomelarischioWeb.RoomLiveTest do
       assert render(p1) =~ "Un numero da 1 a 1"
       assert render(p2) =~ "Un numero da 1 a 1"
 
-      # Both bet 1 → sum (2) == pot (2) → DEVI FARLO.
+      # Both bet 1 → sum (2) == pot (2) → the challenge is won.
       p1 |> form("#pick-form", %{"pick" => "1"}) |> render_submit()
-      assert render(p1) =~ "Numero bloccato"
+      assert render(p1) =~ "Aspettando lo sfidato"
       p2 |> form("#pick-form", %{"pick" => "1"}) |> render_submit()
 
-      assert render(p1) =~ "DEVI FARLO"
-      assert render(p2) =~ "DEVI FARLO"
+      assert render(p1) =~ "LO DEVE FARE"
+      assert render(p2) =~ "ORA LO FAI"
 
       # Rigioca resets both back to the amount step.
       render_click(p1, "reset")

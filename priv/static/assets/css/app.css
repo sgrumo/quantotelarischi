@@ -290,9 +290,6 @@
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
   }
-  .ml-1 {
-    margin-left: calc(var(--spacing) * 1);
-  }
   .block {
     display: block;
   }
@@ -376,6 +373,9 @@
   }
   .justify-center {
     justify-content: center;
+  }
+  .justify-start {
+    justify-content: flex-start;
   }
   .gap-1\.5 {
     gap: calc(var(--spacing) * 1.5);
@@ -897,6 +897,7 @@
   animation: qshake 0.5s ease-in-out;
 }
 .animate-spin-slow {
+  display: inline-block;
   animation: qspin 1s linear infinite;
 }
 input[type="number"].no-spin {
@@ -913,6 +914,7 @@ input[type="number"].no-spin::-webkit-outer-spin-button, input[type="number"].no
   background: #dc2626;
   pointer-events: none;
   z-index: 60;
+  opacity: 0;
   animation: qflash 0.55s ease-out;
 }
 @property --tw-border-style {
