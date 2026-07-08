@@ -103,6 +103,20 @@ defmodule Quantomelarischio.Rooms do
     |> Map.get(:active, 0)
   end
 
+  @doc """
+  Emit periodic usage telemetry. Called by the telemetry poller so the
+  LiveDashboard shows a live gauge of how many rooms are currently alive.
+  """
+  def dispatch_stats() do
+    # The poller's first tick can fire before RoomSupervisor is up (Telemetry
+    # starts first in the supervision tree), so guard against :noproc.
+    if Process.whereis(Quantomelarischio.RoomSupervisor) do
+      :telemetry.execute([:quantomelarischio, :rooms], %{active: get_room_count()}, %{})
+    end
+
+    :ok
+  end
+
   defp generate_room_id() do
     :crypto.strong_rand_bytes(6) |> Base.encode32(case: :lower, padding: false)
   end

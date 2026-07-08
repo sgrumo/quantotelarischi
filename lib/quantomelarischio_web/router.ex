@@ -11,6 +11,15 @@ defmodule QuantomelarischioWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  # Guards the LiveDashboard. In prod, credentials come from config
+  # (:dashboard_auth, set in runtime.exs from env vars) and are required;
+  # in dev, no credentials are configured so the dashboard stays open.
+  pipeline :dashboard do
+    plug :fetch_session
+    plug :protect_from_forgery
+    plug :dashboard_auth
+  end
+
   scope "/", QuantomelarischioWeb do
     pipe_through :browser
 
@@ -19,14 +28,12 @@ defmodule QuantomelarischioWeb.Router do
     live "/r/:room_id", RoomLive
   end
 
-  if Application.compile_env(:quantomelarischio, :dev_routes) do
-    import Phoenix.LiveDashboard.Router
+  import Phoenix.LiveDashboard.Router
 
-    scope "/dev" do
-      pipe_through [:fetch_session, :protect_from_forgery]
+  scope "/dev" do
+    pipe_through :dashboard
 
-      live_dashboard "/dashboard", metrics: QuantomelarischioWeb.Telemetry
-    end
+    live_dashboard "/dashboard", metrics: QuantomelarischioWeb.Telemetry
   end
 
   # Assigns a stable, anonymous per-browser id used to claim a player slot in a room.
@@ -40,5 +47,18 @@ defmodule QuantomelarischioWeb.Router do
 
   defp generate_user_id do
     :crypto.strong_rand_bytes(8) |> Base.url_encode64(padding: false)
+  end
+
+  # Requires HTTP basic auth for the dashboard when credentials are configured
+  # (prod). When none are set (dev), the request passes through untouched.
+  defp dashboard_auth(conn, _opts) do
+    case Application.get_env(:quantomelarischio, :dashboard_auth) do
+      [username: username, password: password]
+      when is_binary(username) and is_binary(password) ->
+        Plug.BasicAuth.basic_auth(conn, username: username, password: password)
+
+      _ ->
+        conn
+    end
   end
 end

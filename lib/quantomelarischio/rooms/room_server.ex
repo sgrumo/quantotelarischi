@@ -58,6 +58,7 @@ defmodule Quantomelarischio.Rooms.RoomServer do
   @impl true
   def init(%{room_id: room_id, challenge_description: challenge_description} = _params) do
     state = Room.new(room_id, challenge_description)
+    emit([:room, :created], %{count: 1}, %{room_id: room_id})
     {:ok, state}
   end
 
@@ -74,8 +75,12 @@ defmodule Quantomelarischio.Rooms.RoomServer do
   @impl true
   def handle_call({:join, user_id}, _from, state) do
     case Room.join(user_id, state) do
-      {:error, reason} -> {:reply, {:error, reason}, state}
-      {:ok, new_state} -> {:reply, {:ok, new_state}, broadcast(new_state)}
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+
+      {:ok, new_state} ->
+        emit([:room, :joined], %{count: 1}, %{room_id: new_state.room_id})
+        {:reply, {:ok, new_state}, broadcast(new_state)}
     end
   end
 
@@ -88,8 +93,15 @@ defmodule Quantomelarischio.Rooms.RoomServer do
   @impl true
   def handle_call({:accept_challenge, challenge_amount}, _from, state) do
     case Room.accept_challenge(challenge_amount, state) do
-      {:error, reason} -> {:reply, {:error, reason}, state}
-      {:ok, new_state} -> {:reply, :ok, broadcast(new_state)}
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+
+      {:ok, new_state} ->
+        emit([:challenge, :accepted], %{count: 1, amount: new_state.challenge_amount}, %{
+          room_id: new_state.room_id
+        })
+
+        {:reply, :ok, broadcast(new_state)}
     end
   end
 
@@ -121,6 +133,9 @@ defmodule Quantomelarischio.Rooms.RoomServer do
         {:reply, {:error, reason}, state}
 
       {:ok, %Room{status: status} = new_state} when status != nil ->
+        emit([:bet, :placed], %{count: 1}, %{room_id: new_state.room_id})
+        emit([:game, :resolved], %{count: 1}, %{room_id: new_state.room_id, status: status})
+
         {:reply,
          {:ok,
           %Room{
@@ -130,6 +145,7 @@ defmodule Quantomelarischio.Rooms.RoomServer do
           }}, broadcast(new_state)}
 
       {:ok, new_state} ->
+        emit([:bet, :placed], %{count: 1}, %{room_id: new_state.room_id})
         {:reply, :ok, broadcast(new_state)}
     end
   end
@@ -175,6 +191,12 @@ defmodule Quantomelarischio.Rooms.RoomServer do
   defp broadcast(%Room{room_id: room_id} = state) do
     Phoenix.PubSub.broadcast(@pubsub, topic(room_id), {:room_updated, state})
     state
+  end
+
+  # Emits a game-usage telemetry event under the [:quantomelarischio | event]
+  # namespace. Metrics are declared in QuantomelarischioWeb.Telemetry.
+  defp emit(event, measurements, metadata) do
+    :telemetry.execute([:quantomelarischio | event], measurements, metadata)
   end
 
   defp via_tuple(room_id) do

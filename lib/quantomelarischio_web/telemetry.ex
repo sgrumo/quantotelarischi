@@ -48,11 +48,38 @@ defmodule QuantomelarischioWeb.Telemetry do
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),
       summary("vm.total_run_queue_lengths.cpu"),
-      summary("vm.total_run_queue_lengths.io")
+      summary("vm.total_run_queue_lengths.io"),
+
+      # Game usage metrics — fed by :telemetry events emitted in RoomServer
+      # and the periodic room-count measurement below.
+      last_value("quantomelarischio.rooms.active",
+        description: "Rooms currently alive in memory"
+      ),
+      counter("quantomelarischio.room.created.count",
+        description: "Rooms created"
+      ),
+      counter("quantomelarischio.room.joined.count",
+        description: "Player joins"
+      ),
+      counter("quantomelarischio.challenge.accepted.count",
+        description: "Challenges accepted (pot set)"
+      ),
+      summary("quantomelarischio.challenge.accepted.amount",
+        description: "Distribution of pot sizes"
+      ),
+      counter("quantomelarischio.bet.placed.count",
+        description: "Secret bets placed"
+      ),
+      counter("quantomelarischio.game.resolved.count",
+        tags: [:status],
+        description: "Games resolved, split by verdict"
+      )
     ]
   end
 
   defp periodic_measurements do
-    []
+    [
+      {Quantomelarischio.Rooms, :dispatch_stats, []}
+    ]
   end
 end

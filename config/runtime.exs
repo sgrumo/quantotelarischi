@@ -33,4 +33,18 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  # Credentials protecting /dev/dashboard in prod. The dashboard exposes
+  # system internals and lets you kill processes, so it must not be public.
+  dashboard_password =
+    System.get_env("DASHBOARD_PASSWORD") ||
+      raise """
+      environment variable DASHBOARD_PASSWORD is missing.
+      It protects the LiveDashboard at /dev/dashboard, which is now served in prod.
+      Set DASHBOARD_PASSWORD (and optionally DASHBOARD_USER, default "admin").
+      """
+
+  config :quantomelarischio, :dashboard_auth,
+    username: System.get_env("DASHBOARD_USER") || "admin",
+    password: dashboard_password
 end
